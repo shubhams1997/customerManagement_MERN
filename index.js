@@ -9,6 +9,8 @@ const mongoose = require("mongoose");
 // My routes
 const authRouters = require("./routes/auth");
 const userRouters = require("./routes/user");
+const categoryRouters = require("./routes/category");
+const brandRouters = require("./routes/brand");
 
 const app = express();
 const port = 8000;
@@ -19,6 +21,8 @@ app.use(cookieParser());
 app.use(bodyParser.json());
 app.use("/api", authRouters);
 app.use("/api", userRouters);
+app.use("/api", categoryRouters);
+app.use("/api", brandRouters);
 
 mongoose
   .connect(process.env.DATABASE_PATH, {

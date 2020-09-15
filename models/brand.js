@@ -7,6 +7,7 @@ const brandSchema = new mongoose.Schema(
       required: true,
       maxlength: 32,
       trim: true,
+      unique: true,
     },
   },
   { timestamps: true }
