@@ -20,29 +20,16 @@ router.param("brandId", getBrandById);
 router.get("/brands", isSignedIn, getAllBrands);
 
 // post
-router.post(
-  "/brand/create/:userId",
-  isSignedIn,
-  isAuthenticated,
-  isAdmin,
-  createBrand
-);
+router.post("/brand/create/:userId", isSignedIn, isAuthenticated, createBrand);
 
 // put
-router.put(
-  "/brand/:brandId/:userId",
-  isSignedIn,
-  isAuthenticated,
-  isAdmin,
-  updateBrand
-);
+router.put("/brand/:brandId/:userId", isSignedIn, isAuthenticated, updateBrand);
 
 // delete
 router.delete(
   "/brand/:brandId/:userId",
   isSignedIn,
   isAuthenticated,
-  isAdmin,
   deleteBrand
 );
 

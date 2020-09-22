@@ -16,23 +16,29 @@ const productSchema = new mongoose.Schema(
     },
     marketPrice: {
       type: Number,
-      required: true,
     },
-    shopPrice: {
+    dealerPrice: {
       type: Number,
       required: true,
     },
-    soldPrice: {
+    salesPrice: {
       type: Number,
+      required: true,
+    },
+    incentive: {
+      type: Number,
+      required: true,
+    },
+    landingPrice: {
+      type: Number,
+      required: true,
     },
     category: {
-      type: ObjectId,
-      ref: "Category",
+      type: String,
       required: true,
     },
     brand: {
-      type: ObjectId,
-      ref: "Brand",
+      type: String,
       required: true,
     },
   },

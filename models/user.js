@@ -16,10 +16,6 @@ var userSchema = new mongoose.Schema(
       maxlength: 32,
       trim: true,
     },
-    email: {
-      type: String,
-      unique: true,
-    },
     encry_password: {
       type: String,
       required: true,

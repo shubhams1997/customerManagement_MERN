@@ -6,6 +6,7 @@ const {
   getUser,
   updateUser,
   getUserForUpdate,
+  getAllUsers,
 } = require("../controllers/user");
 const { isSignedIn, isAuthenticated, isAdmin } = require("../controllers/auth");
 
@@ -15,6 +16,7 @@ router.param("updateUserId", getUserForUpdate);
 
 // routers
 router.get("/user/:userId", isSignedIn, isAuthenticated, getUser);
+router.get("/users/:userId", isSignedIn, isAuthenticated, isAdmin, getAllUsers);
 router.put(
   "/user/:userId/:updateUserId",
   isSignedIn,

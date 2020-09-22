@@ -11,6 +11,7 @@ const authRouters = require("./routes/auth");
 const userRouters = require("./routes/user");
 const categoryRouters = require("./routes/category");
 const brandRouters = require("./routes/brand");
+const productRouters = require("./routes/product");
 
 const app = express();
 const port = 8000;
@@ -23,6 +24,7 @@ app.use("/api", authRouters);
 app.use("/api", userRouters);
 app.use("/api", categoryRouters);
 app.use("/api", brandRouters);
+app.use("/api", productRouters);
 
 mongoose
   .connect(process.env.DATABASE_PATH, {
@@ -34,9 +36,5 @@ mongoose
     console.log("DB is Connected!");
   })
   .catch((err) => console.error("Database is not connected"));
-
-app.get("/", (req, res) => {
-  res.send("<h1>App is working Fine. </h1>");
-});
 
 http.createServer(app).listen(port, "0.0.0.0");

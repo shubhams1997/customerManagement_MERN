@@ -7,7 +7,6 @@ exports.getUserById = (req, res, next, id) => {
         error: "No user found!",
       });
     }
-    console.log("user profile added");
     req.profile = user;
     next();
   });
@@ -31,6 +30,15 @@ exports.getUser = (req, res) => {
   req.profile.createAt = undefined;
   req.profile.updatedAt = undefined;
   return res.json(req.profile);
+};
+
+exports.getAllUsers = (req, res) => {
+  User.find().exec((err, users) => {
+    if (err) {
+      return res.status(400).json({ error: "Something went wrong" });
+    }
+    return res.json(users);
+  });
 };
 
 exports.updateUser = (req, res) => {

@@ -24,7 +24,6 @@ router.post(
   [check("name", "Name must be 3 char long").isLength({ min: 3 })],
   isSignedIn,
   isAuthenticated,
-  isAdmin,
   createCategory
 );
 
@@ -37,7 +36,6 @@ router.put(
   "/category/:categoryId/:userId",
   isSignedIn,
   isAuthenticated,
-  isAdmin,
   updateCategory
 );
 
@@ -46,7 +44,6 @@ router.delete(
   "/category/:categoryId/:userId",
   isSignedIn,
   isAuthenticated,
-  isAdmin,
   deleteCategory
 );
 
