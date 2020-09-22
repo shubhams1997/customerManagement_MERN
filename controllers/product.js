@@ -45,15 +45,15 @@ exports.createProduct = (req, res) => {
 };
 
 exports.updateProduct = (req, res) => {
-  const product = req.product;
-  product.name = req.body.name;
-  product.save((err, product) => {
+  Product.findOneAndUpdate({ _id: req.product._id }, req.body, {
+    new: true,
+  }).exec((err, prod) => {
     if (err) {
       return res.status(400).json({
         error: "Error saving in DB",
       });
     }
-    return res.json(product);
+    return res.json(prod);
   });
 };
 
