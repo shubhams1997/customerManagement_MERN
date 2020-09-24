@@ -34,20 +34,35 @@ exports.getComplaint = (req, res) => {
   return res.json(req.complaint);
 };
 
-exports.getAllComplaints = (req, res) => {
-  Complaint.find().exec((err, complaints) => {
-    if (err || !complaints) {
-      return res.status(400).json({
-        error: "No Complaint Found!",
-      });
-    }
-    return res.json(complaints);
+exports.getAllComplaints = async (req, res) => {
+  let limit = req.query.limit ? parseInt(req.query.limit) : 8;
+  let page =
+    req.query.page && parseInt(req.query.page) >= 0
+      ? parseInt(req.query.page)
+      : 0;
+  let sortBy = req.query.sortBy ? req.query.sortBy : "_id";
+  let totalCount = 0;
+  await Complaint.estimatedDocumentCount({}, (err, count) => {
+    totalCount = count;
   });
+  Complaint.find()
+    .sort([[sortBy, "desc"]])
+    .limit(limit)
+    .skip(page)
+    .exec((err, complaints) => {
+      if (err || !complaints) {
+        return res.status(400).json({
+          error: "No Complaint Found!",
+        });
+      }
+      return res.json({ complaints, totalCount });
+    });
 };
 
 exports.updateComplaint = (req, res) => {
   Complaint.findOneAndUpdate({ _id: req.complaint._id }, req.body, {
     new: true,
+    useFindAndModify: false,
   }).exec((err, complaint) => {
     if (err) {
       return res.status(400).json({

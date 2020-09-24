@@ -39,4 +39,8 @@ mongoose
   })
   .catch((err) => console.error("Database is not connected"));
 
+app.get("/", (req, res) => {
+  console.log(req.query);
+  return res.send(JSON.stringify(req.query));
+});
 http.createServer(app).listen(port, "0.0.0.0");

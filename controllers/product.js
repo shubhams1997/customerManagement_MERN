@@ -17,15 +17,29 @@ exports.getProduct = (req, res) => {
   return res.json(req.product);
 };
 
-exports.getAllProducts = (req, res) => {
-  Product.find().exec((err, products) => {
-    if (err || !products) {
-      return res.status(400).json({
-        error: "Product not Found!",
-      });
-    }
-    return res.json(products);
+exports.getAllProducts = async (req, res) => {
+  let limit = req.query.limit ? parseInt(req.query.limit) : 8;
+  let page =
+    req.query.page && parseInt(req.query.page) >= 0
+      ? parseInt(req.query.page)
+      : 0;
+  let sortBy = req.query.sortBy ? req.query.sortBy : "_id";
+  let totalCount = 0;
+  await Product.estimatedDocumentCount({}, (err, count) => {
+    totalCount = count;
   });
+  Product.find()
+    .sort([[sortBy, "desc"]])
+    .limit(limit)
+    .skip(page)
+    .exec((err, products) => {
+      if (err || !products) {
+        return res.status(400).json({
+          error: "Product not Found!",
+        });
+      }
+      return res.json({ products, totalCount });
+    });
 };
 
 exports.createProduct = (req, res) => {
@@ -47,6 +61,7 @@ exports.createProduct = (req, res) => {
 exports.updateProduct = (req, res) => {
   Product.findOneAndUpdate({ _id: req.product._id }, req.body, {
     new: true,
+    useFindAndModify: false,
   }).exec((err, prod) => {
     if (err) {
       return res.status(400).json({
