@@ -13,6 +13,7 @@ const categoryRouters = require("./routes/category");
 const brandRouters = require("./routes/brand");
 const productRouters = require("./routes/product");
 const complaintRouters = require("./routes/complaint");
+const financetRouters = require("./routes/finance");
 
 const app = express();
 const port = 8000;
@@ -27,6 +28,7 @@ app.use("/api", categoryRouters);
 app.use("/api", brandRouters);
 app.use("/api", productRouters);
 app.use("/api", complaintRouters);
+app.use("/api", financetRouters);
 
 mongoose
   .connect(process.env.DATABASE_PATH, {
