@@ -6,12 +6,20 @@ const financeEntrySchema = mongoose.Schema(
       type: ObjectId,
       ref: "Finance",
     },
+    date: {
+      type: Date,
+      required: true,
+    },
     particular: {
       type: String,
       required: true,
       trim: true,
     },
-    pending: {
+    debit: {
+      type: Number,
+      required: true,
+    },
+    credit: {
       type: Number,
       required: true,
     },

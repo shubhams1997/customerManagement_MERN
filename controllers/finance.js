@@ -1,5 +1,6 @@
 const Finance = require("../models/finance");
 const FinanceEntry = require("../models/financeEntry");
+const { validationResult } = require("express-validator");
 
 exports.getFinanceById = (req, res, next, id) => {
   Finance.findById(id).exec((err, finance) => {
@@ -14,6 +15,10 @@ exports.getFinanceById = (req, res, next, id) => {
 };
 
 exports.createFinance = (req, res) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.status(400).json({ error: errors.array()[0].msg });
+  }
   const finance = new Finance(req.body);
   finance.save((err, finance) => {
     if (err) {
@@ -21,7 +26,23 @@ exports.createFinance = (req, res) => {
         error: "Error in Saving Statement in DB",
       });
     }
-    return res.json(finance);
+    const grossAmount =
+      finance.price + finance.processingFee - finance.downPayment;
+    const financeEntry = new FinanceEntry({
+      record: finance._id,
+      date: new Date(),
+      particular: `Finance Created for customer ${finance.name}`,
+      debit: grossAmount,
+      credit: grossAmount,
+    });
+    financeEntry.save((err, entry) => {
+      if (err) {
+        return res.status(400).json({
+          error: "Error in Saving first Statement in DB",
+        });
+      }
+      return res.json(finance);
+    });
   });
 };
 
@@ -52,4 +73,32 @@ exports.getAllFinance = async (req, res) => {
       }
       return res.json({ finances, totalCount });
     });
+};
+
+// finance Entry
+
+// create Entry
+exports.createEntry = (req, res) => {
+  console.log(req.body);
+  const financeEntry = new FinanceEntry(req.body);
+  financeEntry.save((err, entry) => {
+    if (err) {
+      return res.status(400).json({
+        error: "Error in Saving Entry in DB",
+      });
+    }
+    return res.json(entry);
+  });
+};
+
+// get entries
+exports.getEntries = (req, res) => {
+  FinanceEntry.find({ record: req.finance._id }).exec((err, entries) => {
+    if (err) {
+      return res.status(400).json({
+        error: "No Entry Found with this Finance Id",
+      });
+    }
+    return res.json(entries);
+  });
 };
