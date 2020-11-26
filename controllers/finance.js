@@ -1,7 +1,7 @@
 const Finance = require('../models/finance');
 const FinanceEntry = require('../models/financeEntry');
+const Due = require('../models/due');
 const { validationResult } = require('express-validator');
-const finance = require('../models/finance');
 
 exports.getFinanceById = (req, res, next, id) => {
 	Finance.findById(id).exec((err, finance) => {
@@ -11,6 +11,18 @@ exports.getFinanceById = (req, res, next, id) => {
 			});
 		}
 		req.finance = finance;
+		next();
+	});
+};
+
+exports.getDueById = (req, res, next, id) => {
+	Due.findById(id).exec((err, due) => {
+		if (err || !due) {
+			return res.status(400).json({
+				error: 'Due not found'
+			});
+		}
+		req.due = due;
 		next();
 	});
 };
@@ -32,12 +44,11 @@ exports.createFinance = (req, res) => {
 				error: 'Error in Saving Statement in DB'
 			});
 		}
-		const grossAmount = finance.price + finance.processingFee - finance.downPayment;
 		const financeEntry = new FinanceEntry({
 			finance: finance._id,
 			date: new Date(),
 			particular: `Finance Created for customer ${finance.name}`,
-			amount: grossAmount
+			amount: pending
 		});
 		financeEntry.save((err, entry) => {
 			if (err) {
@@ -104,5 +115,59 @@ exports.getEntries = (req, res) => {
 			});
 		}
 		return res.json(entries);
+	});
+};
+
+// Due
+// create due
+const createDue = () => {
+	Finance.find({}).exec((err, finances) => {
+		if (err) {
+			console.log('Error while processing the finance list ');
+		} else {
+			finances.forEach((finance) => {
+				const date = new Date(`${finance.dueDate}`);
+				const today = new Date();
+				if (date.getDate() == today.getDate() && finance.pending > 0) {
+					const due = new Due({ finance: finance._id });
+					due.save((err, d) => {
+						if (err) {
+							console.log(`Finance due already added for ${finance.name}`);
+						} else {
+							console.log(`due is added for finance ${finance.name}`);
+						}
+					});
+				}
+			});
+		}
+	});
+};
+
+setInterval(() => {
+	createDue();
+}, 5000000);
+
+exports.getAllDues = (req, res) => {
+	Due.find({}).populate('finance', '_id name dueDate mobileNo pending ').exec((err, dues) => {
+		if (err) {
+			return res.status(400).json({
+				error: 'Can not fatch dues'
+			});
+		}
+		return res.json(dues);
+	});
+};
+
+exports.deleteDue = (req, res) => {
+	const due = req.due;
+	due.remove((err, due) => {
+		if (err) {
+			return res.status(400).json({
+				error: 'Failed to delete Due'
+			});
+		}
+		return res.json({
+			message: `${due.name} deleted successfully!`
+		});
 	});
 };
