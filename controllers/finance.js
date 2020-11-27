@@ -100,7 +100,21 @@ exports.createEntry = (req, res) => {
 						error: 'Finance Statement not Found!'
 					});
 				}
-				return res.json({ message: 'payment successfull' });
+				Due.deleteOne({ finance: finance._id }).exec((err, due) => {
+					if (err) {
+						console.log('DELEtion ERROR');
+						return res.status(400).json({
+							error: 'Payment Successfull and no due found!'
+						});
+					}
+					const v = createDue(true);
+					console.log('DUE RECREATED ');
+					if (v)
+						return res.json({
+							message: `Payment Successfull!`
+						});
+				});
+				// return res.json({ message: 'payment successfull' });
 			}
 		);
 	});
@@ -119,24 +133,64 @@ exports.getEntries = (req, res) => {
 };
 
 // Due
+
+function monthDiff(d1, d2) {
+	var months;
+	months = (d2.getFullYear() - d1.getFullYear()) * 12;
+	months -= d1.getMonth();
+	months += d2.getMonth();
+	return months <= 0 ? 0 : months;
+}
+
 // create due
-const createDue = () => {
+const createDue = async (skip) => {
 	Finance.find({}).exec((err, finances) => {
 		if (err) {
 			console.log('Error while processing the finance list ');
 		} else {
 			finances.forEach((finance) => {
 				const date = new Date(`${finance.dueDate}`);
-				const today = new Date();
-				if (date.getDate() == today.getDate() && finance.pending > 0) {
-					const due = new Due({ finance: finance._id });
-					due.save((err, d) => {
-						if (err) {
-							console.log(`Finance due already added for ${finance.name}`);
-						} else {
-							console.log(`due is added for finance ${finance.name}`);
-						}
-					});
+				const today = new Date('2021-01-12');
+				if (skip || date.getDate() == today.getDate()) {
+					// console.log(today);
+					// console.log(date);
+					const { price, downPayment, processingFee, interest, months, pending } = finance;
+					const netAmount =
+						parseInt(price) -
+						parseInt(downPayment) +
+						parseInt(processingFee) +
+						parseInt(interest) * parseInt(months);
+					const EMI =
+						(parseInt(price) -
+							parseInt(downPayment) +
+							parseInt(processingFee) +
+							parseInt(interest) * parseInt(months)) /
+						parseInt(months);
+					const monthsCount = monthDiff(date, today);
+					const dueAmount = EMI * (monthsCount + 1) - (netAmount - pending);
+					if (pending > 0 && dueAmount > 0) {
+						const due = new Due({ finance: finance._id, amount: dueAmount });
+						due.save((err) => {
+							if (err) {
+								console.log(`Finance due already added for ${finance.name}`);
+								Due.findOneAndUpdate(
+									{ finance: finance._id },
+									{ $set: { amount: dueAmount } },
+									{ new: true, userFindAndModify: false },
+									(err, d) => {
+										if (err) {
+											console.log('Due update Error');
+										} else {
+											console.log('DUE UPDATED SUCCESSFULLY');
+										}
+									}
+								);
+							} else {
+								console.log(`due is added for finance ${finance.name}`);
+							}
+							return 1;
+						});
+					}
 				}
 			});
 		}
@@ -144,18 +198,24 @@ const createDue = () => {
 };
 
 setInterval(() => {
-	createDue();
-}, 5000000);
+	createDue(false);
+}, 10000);
 
 exports.getAllDues = (req, res) => {
-	Due.find({}).populate('finance', '_id name dueDate mobileNo pending ').exec((err, dues) => {
-		if (err) {
-			return res.status(400).json({
-				error: 'Can not fatch dues'
-			});
-		}
-		return res.json(dues);
-	});
+	Due.find({})
+		.populate({
+			path: 'finance',
+			select: '_id name dueDate mobileNo pending '
+		})
+		.sort([ [ 'amount', 'desc' ] ])
+		.exec((err, dues) => {
+			if (err) {
+				return res.status(400).json({
+					error: 'Can not fatch dues'
+				});
+			}
+			return res.json(dues);
+		});
 };
 
 exports.deleteDue = (req, res) => {

@@ -7,6 +7,10 @@ const dueSchema = new mongoose.Schema({
 		ref: 'Finance',
 		required: true,
 		unique: true
+	},
+	amount: {
+		type: Number,
+		required: true
 	}
 });
 
