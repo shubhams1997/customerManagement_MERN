@@ -12,7 +12,9 @@ const {
 	createEntry,
 	getAllDues,
 	getDueById,
-	deleteDue
+	updateEntry,
+	getEntryById,
+	getAllEntries
 } = require('../controllers/finance');
 const { isSignedIn, isAuthenticated } = require('../controllers/auth');
 const { getUserById } = require('../controllers/user');
@@ -23,6 +25,7 @@ router.param('userId', getUserById);
 router.param('financeId', getFinanceById);
 router.param('seriesId', getSeriesById);
 router.param('dueId', getDueById);
+router.param('entryId', getEntryById);
 
 // routes
 
@@ -46,6 +49,9 @@ router.get('/finance/:financeId', isSignedIn, getFinance);
 router.get('/finances/:seriesId', isSignedIn, getAllFinance);
 
 router.get('/financeEntries/:financeId', isSignedIn, getEntries);
+router.get('/financeEntries', isSignedIn, getAllEntries);
 router.get('/finance/dues/:userId', isSignedIn, isAuthenticated, getAllDues);
-router.delete('/finance/due/:userId/:dueId', isSignedIn, isAuthenticated, deleteDue);
+// router.delete('/finance/due/:userId/:dueId', isSignedIn, isAuthenticated, deleteDue);
+
+router.put('/financeEntry/update/:entryId/:userId', isSignedIn, isAuthenticated, updateEntry);
 module.exports = router;

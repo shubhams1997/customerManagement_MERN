@@ -27,6 +27,18 @@ exports.getDueById = (req, res, next, id) => {
 	});
 };
 
+exports.getEntryById = (req, res, next, id) => {
+	FinanceEntry.findById(id).exec((err, entry) => {
+		if (err || !entry) {
+			return res.status(400).json({
+				error: 'Entry not Found'
+			});
+		}
+		req.entry = entry;
+		next();
+	});
+};
+
 exports.createFinance = (req, res) => {
 	const errors = validationResult(req);
 	if (!errors.isEmpty()) {
@@ -46,7 +58,7 @@ exports.createFinance = (req, res) => {
 		}
 		const financeEntry = new FinanceEntry({
 			finance: finance._id,
-			date: new Date(),
+			date: finance.DOP,
 			particular: `Finance Created for customer ${finance.name}`,
 			amount: pending
 		});
@@ -132,6 +144,21 @@ exports.getEntries = (req, res) => {
 	});
 };
 
+exports.getAllEntries = (req, res) => {
+	const today = new Date();
+	today.setDate(today.getDate() - 5);
+	FinanceEntry.find({
+		date: { $gte: today }
+	}).exec((err, entries) => {
+		if (err) {
+			return res.status(400).json({
+				error: 'Error is Fatching Entries'
+			});
+		}
+		return res.json(entries);
+	});
+};
+
 // Due
 
 function monthDiff(d1, d2) {
@@ -150,10 +177,8 @@ const createDue = async (skip) => {
 		} else {
 			finances.forEach((finance) => {
 				const date = new Date(`${finance.dueDate}`);
-				const today = new Date('2021-01-12');
+				const today = new Date('2020-12-28');
 				if (skip || date.getDate() == today.getDate()) {
-					// console.log(today);
-					// console.log(date);
 					const { price, downPayment, processingFee, interest, months, pending } = finance;
 					const netAmount =
 						parseInt(price) -
@@ -172,7 +197,7 @@ const createDue = async (skip) => {
 						const due = new Due({ finance: finance._id, amount: dueAmount });
 						due.save((err) => {
 							if (err) {
-								console.log(`Finance due already added for ${finance.name}`);
+								// console.log(`Finance due already added for ${finance.name}`);
 								Due.findOneAndUpdate(
 									{ finance: finance._id },
 									{ $set: { amount: dueAmount } },
@@ -181,7 +206,9 @@ const createDue = async (skip) => {
 										if (err) {
 											console.log('Due update Error');
 										} else {
-											console.log('DUE UPDATED SUCCESSFULLY');
+											{
+												skip && console.log('DUE UPDATED SUCCESSFULLY');
+											}
 										}
 									}
 								);
@@ -218,16 +245,32 @@ exports.getAllDues = (req, res) => {
 		});
 };
 
-exports.deleteDue = (req, res) => {
-	const due = req.due;
-	due.remove((err, due) => {
+exports.updateEntry = (req, res) => {
+	const entry = req.entry;
+	entry.date = req.body.date;
+	entry.particular = req.body.particular;
+	entry.voucherNo = req.body.voucherNo;
+
+	entry.save((err, entry) => {
 		if (err) {
 			return res.status(400).json({
-				error: 'Failed to delete Due'
+				error: 'Failed to Update Entry'
 			});
 		}
-		return res.json({
-			message: `${due.name} deleted successfully!`
-		});
+		return res.json(entry);
 	});
 };
+
+// exports.deleteDue = (req, res) => {
+// 	const due = req.due;
+// 	due.remove((err, due) => {
+// 		if (err) {
+// 			return res.status(400).json({
+// 				error: 'Failed to delete Due'
+// 			});
+// 		}
+// 		return res.json({
+// 			message: `${due.name} deleted successfully!`
+// 		});
+// 	});
+// };
