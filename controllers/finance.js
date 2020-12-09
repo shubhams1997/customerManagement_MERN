@@ -177,7 +177,7 @@ const createDue = async (skip) => {
 		} else {
 			finances.forEach((finance) => {
 				const date = new Date(`${finance.dueDate}`);
-				const today = new Date('2020-12-28');
+				const today = new Date('2020-12-08');
 				if (skip || date.getDate() == today.getDate()) {
 					const { price, downPayment, processingFee, interest, months, pending } = finance;
 					const netAmount =
@@ -192,7 +192,8 @@ const createDue = async (skip) => {
 							parseInt(interest) * parseInt(months)) /
 						parseInt(months);
 					const monthsCount = monthDiff(date, today);
-					const dueAmount = EMI * (monthsCount + 1) - (netAmount - pending);
+					const actualMonths = monthsCount < parseInt(months) ? monthsCount : parseInt(months);
+					const dueAmount = EMI * actualMonths - (netAmount - pending);
 					if (pending > 0 && dueAmount > 0) {
 						const due = new Due({ finance: finance._id, amount: dueAmount });
 						due.save((err) => {
@@ -223,16 +224,16 @@ const createDue = async (skip) => {
 		}
 	});
 };
-
+createDue(false);
 setInterval(() => {
 	createDue(false);
-}, 10000);
+}, 3000);
 
 exports.getAllDues = (req, res) => {
 	Due.find({})
 		.populate({
 			path: 'finance',
-			select: '_id name dueDate mobileNo pending '
+			select: '_id name dueDate mobileNo pending caseNo'
 		})
 		.sort([ [ 'amount', 'desc' ] ])
 		.exec((err, dues) => {
